@@ -1,52 +1,60 @@
+````markdown
+# 🌱 GreenPulse
 
-# GreenPulse
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)  
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green?logo=fastapi)  
+![Ethereum](https://img.shields.io/badge/Ethereum-Web3.py-purple?logo=ethereum)  
+![License](https://img.shields.io/badge/License-MIT-yellow)  
 
-**GreenPulse** é uma aplicação backend construída com **FastAPI** e **SQLite**, projetada para gerenciar usuários e posts, fornecendo uma API REST completa.
+**GreenPulse** é uma aplicação backend construída com **FastAPI** e **SQLite**, projetada para gerenciar usuários e posts, agora integrada ao **Ethereum** para fornecer rastreabilidade imutável de dados e integração com carteiras digitais.  
+
+A API expõe endpoints REST para criação e consulta de **usuários**, **posts** e suas respectivas interações com a blockchain.  
 
 ---
 
-## 🗂 Estrutura do Projeto
+# 📂 Estrutura do Projeto
 
-```
-
+```bash
 GreenPulse/
 │
 ├─ app/
-│  ├─ main.py          # Inicializa a aplicação FastAPI
-│  ├─ models.py        # Modelos do banco de dados (ORM)
-│  ├─ schemas.py       # Schemas Pydantic para validação
-│  ├─ crud.py          # Operações CRUD do banco
-│  ├─ database.py      # Conexão com o banco SQLite
-│  └─ init\_db.py       # Script para criar as tabelas do banco
+│  ├─ main.py        # Inicializa a aplicação FastAPI
+│  ├─ models.py      # Modelos ORM (Users, Posts com wallet/tx)
+│  ├─ schemas.py     # Schemas Pydantic para validação
+│  ├─ crud.py        # Operações CRUD do banco
+│  ├─ database.py    # Conexão com banco SQLite
+│  ├─ blockchain.py  # Conexão e funções com Ethereum
+│  └─ init_db.py     # Script para criar as tabelas
 │
-├─ greenpulse.db       # Banco de dados SQLite
-├─ requirements.txt    # Dependências do projeto
-└─ .env                # Variáveis de ambiente
-
+├─ greenpulse.db     # Banco SQLite (desenvolvimento)
+├─ requirements.txt  # Dependências do projeto
+└─ .env              # Variáveis de ambiente
 ````
 
 ---
 
-## ⚙️ Configuração do Ambiente
+# ⚙️ Configuração do Ambiente
 
-1. Clone o repositório:
+Clone o repositório:
 
 ```bash
 git clone https://github.com/Tapiocamanz/GreenPulse.git
 cd GreenPulse
-````
+```
 
-2. Crie e ative um ambiente virtual:
+Crie e ative um ambiente virtual:
 
 ```bash
 python -m venv venv
+
 # Windows
 venv\Scripts\activate
+
 # Linux/Mac
 source venv/bin/activate
 ```
 
-3. Instale as dependências:
+Instale as dependências:
 
 ```bash
 pip install -r requirements.txt
@@ -56,165 +64,79 @@ pip install -r requirements.txt
 
 ## 🗄 Configuração do Banco de Dados
 
-O banco de dados usado é **SQLite** (`greenpulse.db`).
-
-**Arquivo `app/database.py`:**
-
-```python
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./greenpulse.db"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-```
-
-### Inicialização das tabelas
-
-```python
-# app/init_db.py
-from app.database import engine
-from app import models
-
-models.Base.metadata.create_all(bind=engine)
-print("Tabelas criadas com sucesso!")
-```
-
-Para criar as tabelas:
+O banco padrão é **SQLite (greenpulse.db)**.
 
 ```bash
 python -m app.init_db
+```
+
+Esse comando cria as tabelas **users** e **posts**.
+
+---
+
+## 🔗 Integração com Ethereum
+
+O projeto utiliza **web3.py** para comunicação com a rede Ethereum.
+
+No arquivo `.env` configure:
+
+```env
+ETH_NODE_URL=https://mainnet.infura.io/v3/SUA_API_KEY
+```
+
+Verificação de conexão:
+
+```python
+from app.blockchain import web3
+
+print(web3.is_connected())  # True se conectado
 ```
 
 ---
 
 ## 🧩 Modelos (ORM)
 
-**app/models.py:**
+### User
 
-```python
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
-from .database import Base
+* `id`: inteiro (PK)
+* `name`: string
+* `wallet_address`: endereço Ethereum vinculado
 
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
+### Post
 
-class Post(Base):
-    __tablename__ = "posts"
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-
-    user = relationship("User", backref="posts")
-```
+* `id`: inteiro (PK)
+* `title`: string
+* `user_id`: FK → User.id
+* `tx_hash`: hash da transação Ethereum
 
 ---
 
-## 📦 Schemas Pydantic
+## 📦 Schemas (Pydantic)
 
-**app/schemas.py** define os modelos de dados para validação de entrada/saída:
-
-```python
-from pydantic import BaseModel
-
-class UserBase(BaseModel):
-    name: str
-
-class UserCreate(UserBase):
-    pass
-
-class User(UserBase):
-    id: int
-    class Config:
-        orm_mode = True
-
-class PostBase(BaseModel):
-    title: str
-    user_id: int
-
-class PostCreate(PostBase):
-    pass
-
-class Post(PostBase):
-    id: int
-    class Config:
-        orm_mode = True
-```
+* **UserCreate** → `name`, `wallet_address`
+* **PostCreate** → `title`, `user_id`
+* **User / Post** → retornam dados incluindo `id` e `tx_hash`
 
 ---
 
-## 🔧 CRUD (Operações do Banco)
+## 🔧 CRUD com Blockchain
 
-**app/crud.py** exemplo:
-
-```python
-from sqlalchemy.orm import Session
-from . import models, schemas
-
-def create_user(db: Session, user: schemas.UserCreate):
-    db_user = models.User(name=user.name)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-def get_users(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.User).offset(skip).limit(limit).all()
-```
+* Ao criar um **Post**, é gerado e armazenado um **hash de transação Ethereum (tx\_hash)**.
+* Usuários possuem um **endereço Ethereum (wallet\_address)**.
 
 ---
 
 ## 🚀 Rodando a Aplicação
 
+Inicie o servidor com:
+
 ```bash
 uvicorn app.main:app --reload
 ```
 
-* API disponível em: [http://127.0.0.1:8000](http://127.0.0.1:8000)
-* Swagger UI (documentação interativa): [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-* ReDoc (documentação detalhada): [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
-
----
-
-## 🔍 Consultas no Banco de Dados
-
-### Usando SQLite diretamente
-
-```bash
-sqlite3 greenpulse.db
-```
-
-Comandos SQL:
-
-```sql
-.tables                 -- listar tabelas
-.schema users           -- ver estrutura da tabela
-SELECT * FROM users;    -- consultar dados
-.exit                   -- sair do SQLite
-```
-
-### Usando Python
-
-```python
-import sqlite3
-
-conn = sqlite3.connect("greenpulse.db")
-cursor = conn.cursor()
-
-cursor.execute("SELECT * FROM users")
-for row in cursor.fetchall():
-    print(row)
-
-conn.close()
-```
+* API → [http://127.0.0.1:8000](http://127.0.0.1:8000)
+* Swagger UI → [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+* ReDoc → [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 
 ---
 
@@ -222,14 +144,15 @@ conn.close()
 
 ### Usuários (`/users`)
 
-* **GET /users** – Lista todos os usuários
-* **POST /users** – Cria um novo usuário
+* `GET /users` → Lista usuários
+* `POST /users` → Cria usuário
 
-Exemplo POST JSON:
+Exemplo:
 
 ```json
 {
-  "name": "Aldebaran"
+  "name": "Aldebaran",
+  "wallet_address": "0x1234abcd5678ef..."
 }
 ```
 
@@ -237,39 +160,61 @@ Exemplo POST JSON:
 
 ### Posts (`/posts`)
 
-* **GET /posts** – Lista todos os posts
-* **POST /posts** – Cria um novo post
+* `GET /posts` → Lista posts
+* `POST /posts` → Cria post e registra hash no Ethereum
 
-Exemplo POST JSON:
+Exemplo:
 
 ```json
 {
-  "title": "Meu primeiro post",
+  "title": "Meu primeiro post blockchain",
   "user_id": 1
+}
+```
+
+Resposta:
+
+```json
+{
+  "id": 1,
+  "title": "Meu primeiro post blockchain",
+  "user_id": 1,
+  "tx_hash": "0xabc123..."
 }
 ```
 
 ---
 
+### Blockchain Extra
+
+* `GET /users/{id}/balance` → Consulta saldo da carteira do usuário
+* `GET /posts/{id}/verify` → Verifica existência do `tx_hash` na rede Ethereum
+
+---
+
 ## ✅ Testando a API
 
-1. Abra [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-2. Use o Swagger UI para testar **GET** e **POST** de usuários e posts.
-3. Confira se os dados foram inseridos no `greenpulse.db`.
+Abra o Swagger UI em:
+👉 [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+Teste criação de usuários/posts e valide a integração blockchain.
 
 ---
 
 ## 💡 Observações
 
-* Todos os modelos têm `orm_mode = True` para compatibilidade com SQLAlchemy.
-* O SQLite é recomendado apenas para desenvolvimento; para produção, prefira MySQL ou PostgreSQL.
-* Você pode adicionar autenticação, filtros e paginação facilmente usando FastAPI.
-
-```
+* **SQLite recomendado apenas para desenvolvimento.**
+* Produção → usar **PostgreSQL ou MySQL**.
+* Pode-se estender para **autenticação via assinatura Ethereum (login com carteira)**.
+* Futuramente, o sistema pode migrar para **Smart Contracts completos**.
 
 ---
 
-Se você quiser, Aldebaran, posso criar **uma versão ainda mais detalhada**, incluindo **exemplos de resposta completa, erros comuns (como 422), e relacionamentos entre tabelas** — pronta para ser publicada como documentação oficial.  
+## 📜 Licença
 
-Quer que eu faça isso também?
+Este projeto está sob a **licença MIT** – veja o arquivo LICENSE para mais detalhes.
+
+```
+
+Quer que eu também adicione um **sumário (Table of Contents)** automático no início do README para facilitar a navegação?
 ```

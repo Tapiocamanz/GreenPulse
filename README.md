@@ -56,7 +56,7 @@ greenpulse-backend/
 
 ---
 
-## 🗄️ Passo 3 – Conexão com o Banco (PostgreSQL/PostGIS)
+## Passo 3 – Conexão com o Banco (PostgreSQL/PostGIS)
 
 Crie o arquivo **`.env`** com os dados do banco:
 

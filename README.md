@@ -56,18 +56,24 @@ greenpulse-backend/
 
 ---
 
-## Passo 3 – Conexão com o Banco (PostgreSQL/PostGIS)
+Boa! 🚀 Esse segundo trecho que você montou já ficou um **guia de implementação bem completo** — do banco até o servidor rodando. Para manter no mesmo estilo dos passos anteriores (bem didático, numerado e direto), vou organizar novamente tudo em **checklist de implantação**, assim você pode usar como tutorial/documentação do projeto GreenPulse:
 
-Crie o arquivo **`.env`** com os dados do banco:
+---
 
-```env
+# GreenPulse API – Estrutura FastAPI + PostgreSQL/PostGIS
+
+### Passo 3 – Conexão com o Banco
+
+📄 Crie o arquivo `.env`:
+
+```ini
 DATABASE_URL=postgresql://usuario:senha@localhost:5432/greenpulse
 SECRET_KEY=chave_super_secreta
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
-**app/database.py**
+📄 `app/database.py`
 
 ```python
 from sqlalchemy import create_engine
@@ -87,9 +93,9 @@ Base = declarative_base()
 
 ---
 
-## Passo 4 – Modelos (SQLAlchemy)
+### Passo 4 – Modelos (SQLAlchemy)
 
-**app/models.py**
+📄 `app/models.py`
 
 ```python
 from sqlalchemy import Column, Integer, String, ForeignKey, Float
@@ -120,13 +126,13 @@ class Tree(Base):
 
 ---
 
-## Passo 5 – Schemas (Pydantic)
+### Passo 5 – Schemas (Pydantic)
 
-**app/schemas.py**
+📄 `app/schemas.py`
 
 ```python
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 
 class TreeBase(BaseModel):
     species: str
@@ -160,16 +166,14 @@ class User(UserBase):
 
 ---
 
-## Passo 6 – Autenticação (JWT)
+### Passo 6 – Autenticação (JWT)
 
-**app/auth.py**
+📄 `app/auth.py`
 
 ```python
 from datetime import datetime, timedelta
-from jose import JWTError, jwt
+from jose import jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
 import os
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -177,7 +181,6 @@ ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -194,9 +197,9 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 ---
 
-## Passo 7 – CRUD
+### Passo 7 – CRUD
 
-**app/crud.py**
+📄 `app/crud.py`
 
 ```python
 from sqlalchemy.orm import Session
@@ -226,9 +229,9 @@ def create_tree(db: Session, tree: schemas.TreeCreate, user_id: int):
 
 ---
 
-## Passo 8 – Rotas
+### Passo 8 – Rotas
 
-**app/routers/users.py**
+📄 `app/routers/users.py`
 
 ```python
 from fastapi import APIRouter, Depends
@@ -242,7 +245,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.Session
     return crud.create_user(db, user)
 ```
 
-**app/routers/trees.py**
+📄 `app/routers/trees.py`
 
 ```python
 from fastapi import APIRouter, Depends
@@ -253,14 +256,14 @@ router = APIRouter()
 
 @router.post("/trees/", response_model=schemas.Tree)
 def create_tree(tree: schemas.TreeCreate, db: Session = Depends(database.SessionLocal)):
-    return crud.create_tree(db, tree, user_id=1)  # exemplo fixo (autenticação depois)
+    return crud.create_tree(db, tree, user_id=1)  # fixo até autenticação
 ```
 
 ---
 
-## Passo 9 – Arquivo principal
+### Passo 9 – Arquivo Principal
 
-**app/main.py**
+📄 `app/main.py`
 
 ```python
 from fastapi import FastAPI
@@ -277,18 +280,18 @@ app.include_router(trees.router)
 
 ---
 
-## Passo 10 – Rodando o servidor
-
-No terminal, execute:
+### Passo 10 – Rodando o Servidor
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-A API estará disponível em:
- [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) *(Swagger UI interativa)*
+🌐 Acesse a documentação interativa:
+👉 [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 ---
+
+Quer que eu prepare também o **Passo 11 – Dockerfile + docker-compose** para já deixar o PostgreSQL/PostGIS rodando com a API dentro de containers?
 
 ```
 

@@ -1,18 +1,18 @@
 // Configuração da API
 export const API_CONFIG = {
   // URL base da API
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8000/',
   
   // Timeout das requisições (em ms)
   TIMEOUT: 10000,
   
   // Endpoints de autenticação
   AUTH: {
-    LOGIN: '/api/auth/login/',
-    REGISTER: '/api/auth/register/',
-    REFRESH: '/api/auth/refresh/',
-    LOGOUT: '/api/auth/logout/',
-    VALIDATE: '/api/auth/validate/',
+    LOGIN: 'api/auth/login/',
+    REGISTER: 'api/auth/register/',
+    REFRESH: 'api/auth/refresh/',
+    LOGOUT: 'api/auth/logout/',
+    VALIDATE: 'api/auth/validate/',
   },
   
   // Endpoints de recompensas

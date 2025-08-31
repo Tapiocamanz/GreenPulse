@@ -1,9 +1,17 @@
 // Core Types
 export interface User {
-  id: string;
-  name: string;
+  id: number;
+  username: string;
   email: string;
-  avatar?: string;
+  trees?: Tree[];
+}
+
+export interface Tree {
+  id: number;
+  species: string;
+  latitude: number;
+  longitude: number;
+  owner_id: number;
 }
 
 export interface ApiResponse<T> {

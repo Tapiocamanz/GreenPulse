@@ -1,45 +1,53 @@
 // Configuração da API
 export const API_CONFIG = {
   // URL base da API
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
   
   // Timeout das requisições (em ms)
   TIMEOUT: 10000,
   
   // Endpoints de autenticação
   AUTH: {
-    LOGIN: '/auth/login/',
-    REGISTER: '/auth/register/',
-    REFRESH: '/auth/refresh/',
-    LOGOUT: '/auth/logout/',
-    VALIDATE: '/auth/validate/',
+    LOGIN: '/api/auth/login/',
+    REGISTER: '/api/auth/register/',
+    REFRESH: '/api/auth/refresh/',
+    LOGOUT: '/api/auth/logout/',
+    VALIDATE: '/api/auth/validate/',
   },
   
   // Endpoints de recompensas
   REWARDS: {
-    LIST: '/rewards/',
-    ACTIVE: '/rewards/active/',
-    AVAILABLE: '/rewards/available/',
-    BY_ID: (id: string) => `/rewards/${id}/`,
-    BY_CATEGORY: (category: string) => `/rewards/category/${category}/`,
-    STATISTICS: '/rewards/statistics/',
+    LIST: '/api/rewards/',
+    ACTIVE: '/api/rewards/active/',
+    AVAILABLE: '/api/rewards/available/',
+    BY_ID: (id: string) => `/api/rewards/${id}/`,
+    BY_CATEGORY: (category: string) => `/api/rewards/category/${category}/`,
+    STATISTICS: '/api/rewards/statistics/',
   },
   
   // Endpoints de usuário
   USER: {
-    PROFILE: '/user/profile/',
-    UPDATE: '/user/update/',
-    POINTS: '/user/points/',
-    HISTORY: '/user/history/',
+    PROFILE: '/api/users/',
+    UPDATE: '/api/users/',
+    POINTS: '/api/users/points/',
+    HISTORY: '/api/users/history/',
+  },
+  
+  // Endpoints de árvores
+  TREES: {
+    LIST: '/api/trees/',
+    CREATE: '/api/trees/',
+    BY_ID: (id: string) => `/api/trees/${id}/`,
+    BY_USER: (userId: string) => `/api/trees/user/${userId}/`,
   },
   
   // Endpoints de serviços
   SERVICES: {
-    IPTU: '/services/iptu/',
-    VEM: '/services/vem/',
-    CINEMA: '/services/cinema/',
-    GPS: '/services/gps/',
-    TREE_ADOPTION: '/services/tree-adoption/',
+    IPTU: '/api/services/iptu/',
+    VEM: '/api/services/vem/',
+    CINEMA: '/api/services/cinema/',
+    GPS: '/api/services/gps/',
+    TREE_ADOPTION: '/api/services/tree-adoption/',
   },
   
   // Headers padrão

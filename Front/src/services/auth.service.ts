@@ -59,13 +59,23 @@ export class AuthServiceImpl implements AuthService {
 
   async login(credentials: LoginCredentials): Promise<User> {
     try {
-      const response = await apiClient.post<{ user: User; token: string; refresh_token?: string }>(
+      // Usar FormData para login (OAuth2PasswordRequestForm)
+      const formData = new FormData();
+      formData.append('username', credentials.email);
+      formData.append('password', credentials.password);
+
+      const response = await apiClient.post<{ access_token: string; token_type: string; expires_in: number }>(
         API_CONFIG.AUTH.LOGIN,
-        credentials
+        formData
       );
 
-      const { user, token, refresh_token } = response.data;
-      this.saveUserData(user, token, refresh_token);
+      const { access_token } = response.data;
+      
+      // Buscar dados do usuário usando o token
+      const userResponse = await apiClient.get<User>(`${API_CONFIG.USER.PROFILE}?username=${credentials.email}`);
+      const user = userResponse.data;
+      
+      this.saveUserData(user, access_token);
 
       return user;
     } catch (error) {
@@ -87,25 +97,28 @@ export class AuthServiceImpl implements AuthService {
 
       console.log('🔧 Fazendo requisição para:', API_CONFIG.AUTH.REGISTER);
       console.log('🔧 Dados enviados:', {
-        name: credentials.name,
+        username: credentials.name, // Mapear name para username
         email: credentials.email,
-        password: credentials.password,
-        cpf: credentials.cpf || '00000000000'
+        password: credentials.password
       });
 
-      const response = await apiClient.post<{ user: User; token: string; refresh_token?: string }>(
+      const response = await apiClient.post<User>(
         API_CONFIG.AUTH.REGISTER,
         {
-          name: credentials.name,
+          username: credentials.name, // Mapear name para username
           email: credentials.email,
-          password: credentials.password,
-          cpf: credentials.cpf || '00000000000' // CPF temporário se não fornecido
+          password: credentials.password
         }
       );
 
       console.log('🔧 Resposta recebida:', response.data);
-      const { user, token, refresh_token } = response.data;
-      this.saveUserData(user, token, refresh_token);
+      const user = response.data;
+      
+      // Fazer login automático após registro
+      await this.login({
+        email: credentials.email,
+        password: credentials.password
+      });
 
       return user;
     } catch (error) {
@@ -137,8 +150,8 @@ export class AuthServiceImpl implements AuthService {
 
   async refreshToken(): Promise<void> {
     try {
-      const response = await apiClient.post<{ token: string }>(API_CONFIG.AUTH.REFRESH, {});
-      localStorage.setItem(AUTH_CONFIG.TOKEN_KEY, response.data.token);
+      const response = await apiClient.post<{ access_token: string }>(API_CONFIG.AUTH.REFRESH, {});
+      localStorage.setItem(AUTH_CONFIG.TOKEN_KEY, response.data.access_token);
     } catch (error) {
       console.error('Token refresh error:', error);
       this.clearUserData();

@@ -63,7 +63,7 @@ pip install -r requirements.txt
 
 ---
 
-## 🗄 Banco de Dados
+## Banco de Dados
 
 O banco padrão é **SQLite** (`greenpulse.db`).
 Crie as tabelas com:
